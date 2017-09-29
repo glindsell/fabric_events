@@ -32,7 +32,6 @@ import (
 
 var wg sync.WaitGroup
 
-//Disconnected implements consumer.EventAdapter interface for disconnecting
 func disconnected(err error) {
 	if err != nil {
 		fmt.Printf("Error on disconnect: %v", err)
@@ -55,12 +54,13 @@ func createEventClient(eventAddress string, channelIDs, txIDs, chaincodeEvents [
 		eventsClient.Stop()
 	}
 	if block == true {
-		err := eventsClient.RegisterBlockEvent(func(msg *peer.Event_Block) {
+		err := eventsClient.RegisterBlockEvent(func(msg *peer.Event_Block) error {
 			fmt.Println("")
 			fmt.Println("")
 			fmt.Println("Received block")
 			fmt.Println("--------------")
 			fmt.Println(msg)
+			return nil
 		})
 		if err != nil {
 			return err
@@ -73,36 +73,39 @@ func createEventClient(eventAddress string, channelIDs, txIDs, chaincodeEvents [
 		}
 	}
 	if len(txIDs) != 0 {
-		err := eventsClient.RegisterTxEvents(txIDs, func(msg *peer.Transaction) {
+		err := eventsClient.RegisterTxEvents(txIDs, func(msg *peer.Transaction) error {
 			fmt.Println("")
 			fmt.Println("")
 			fmt.Println("Received tx event")
 			fmt.Println("--------------")
 			fmt.Println(msg)
+			return nil
 		})
 		if err != nil {
 			return err
 		}
 	}
 	if len(chaincodeEvents) != 0 {
-		err := eventsClient.RegisterChaincodeEvents(chaincodeEvents, func(msg *peer.ChaincodeEvent) {
+		err := eventsClient.RegisterChaincodeEvents(chaincodeEvents, func(msg *peer.ChaincodeEvent) error {
 			fmt.Println("")
 			fmt.Println("")
 			fmt.Println("Received chaincode event")
 			fmt.Println("--------------")
 			fmt.Println(msg)
+			return nil
 		})
 		if err != nil {
 			return err
 		}
 	}
 	if invalid == true {
-		err := eventsClient.RegisterInvalidEvent(func(msg *common.ChannelHeader) {
+		err := eventsClient.RegisterInvalidEvent(func(msg *common.ChannelHeader) error {
 			fmt.Println("")
 			fmt.Println("")
 			fmt.Printf("Received invalid transaction from channel '%s'\n", msg.ChannelId)
 			fmt.Println("--------------")
 			fmt.Printf("Transaction invalid: TxID: %s\n", msg.TxId)
+			return nil
 		})
 		if err != nil {
 			return err
@@ -168,7 +171,7 @@ func main() {
 	err := createEventClient(eventAddress, channelIDs, txIDs, chaincodeEvents, block, invalid)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(-1)
+		os.Exit(1)
 	}
 
 	wg.Wait()

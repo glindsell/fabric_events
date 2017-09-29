@@ -37,13 +37,13 @@ import (
 
 var consumerLogger = flogging.MustGetLogger("eventhub_consumer")
 
-type recvBlockEventFunc func(*peer.Event_Block)
+type recvBlockEventFunc func(*peer.Event_Block) error
 
-type recvChaincodeEventFunc func(*peer.ChaincodeEvent)
+type recvChaincodeEventFunc func(*peer.ChaincodeEvent) error
 
-type recvTxEventFunc func(*peer.Transaction)
+type recvTxEventFunc func(*peer.Transaction) error
 
-type recvInvalidEventFunc func(*common.ChannelHeader)
+type recvInvalidEventFunc func(*common.ChannelHeader) error
 
 type disconnectedFunc func(error)
 
@@ -325,10 +325,6 @@ func (ec *EventsClient) processEvents() error {
 			continue
 		}
 
-		fmt.Println("*** in ***")
-		fmt.Println(in)
-		fmt.Println("*** /in ***")
-		
 		block := in.Event.(*peer.Event_Block).Block
 		txsFltr := util.TxValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 		for i, ebytes := range block.Data.Data {

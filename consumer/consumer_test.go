@@ -13,10 +13,7 @@ import (
 	"testing"
 	"time"
 
-//	"google.golang.org/grpc/credentials"
-//	"google.golang.org/grpc/grpclog"
-//	"github.com/hyperledger/fabric/core/config"
-
+	"github.com/hyperledger/fabric/common/ledger/testutil"
 	coreutil "github.com/hyperledger/fabric/core/testutil"
 	"github.com/hyperledger/fabric/events/producer"
 	"github.com/hyperledger/fabric/msp/mgmt/testtools"
@@ -25,31 +22,27 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
-//	"github.com/hyperledger/fabric/core/comm"
 )
 
 var peerAddress = "0.0.0.0:7303"
 
-var eventsClient *EventsClient
-
 func mockDisconnected(err error) {}
 
-func mockRecvInvalidEventFunc(msg *common.ChannelHeader) {
-	return
+func mockRecvInvalidEventFunc(msg *common.ChannelHeader) error {
+	return nil
 }
 
-func mockRecvBlockEventFunc(msg *peer.Event_Block) {
-	return
+func mockRecvBlockEventFunc(msg *peer.Event_Block) error {
+	return nil
 }
 
-func mockRecvChaincodeEventFunc(msg *peer.ChaincodeEvent) {
-	return
+func mockRecvChaincodeEventFunc(msg *peer.ChaincodeEvent) error {
+	return nil
 }
 
-func mockRecvTxEventFunc(msg *peer.Transaction) {
-	return
+func mockRecvTxEventFunc(msg *peer.Transaction) error {
+	return nil
 }
-
 
 func TestNewEventsClient(t *testing.T) {
 	var cases = []struct {
@@ -123,7 +116,7 @@ func TestNewEventsClientConnectionWithAddress(t *testing.T) {
 			if test.expected {
 				assert.NoError(t, err)
 			} else {
-			//	fmt.Println("***", err)
+				//	fmt.Println("***", err)
 				assert.Error(t, err)
 			}
 		})
@@ -154,7 +147,7 @@ func TestStart(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(test.address, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(test.address, regTimeout, mockDisconnected)
 			err = eventsClient.Start()
 			if test.expected {
 				assert.NoError(t, err)
@@ -171,7 +164,7 @@ func TestStop(t *testing.T) {
 	var err error
 	var regTimeout = 5 * time.Second
 
-	eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+	eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 
 	if err = eventsClient.Start(); err != nil {
 		t.Fail()
@@ -214,7 +207,7 @@ func TestRegisterInvalidEvent(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterInvalidEvent(test.ri); err != nil {
@@ -265,7 +258,7 @@ func TestRegisterBlockEvent(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterBlockEvent(test.rb); err != nil {
@@ -334,7 +327,7 @@ func TestRegisterChaincodeEvent(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterChaincodeEvents(test.chaincodeEventsList, test.rc); err != nil {
@@ -396,7 +389,7 @@ func TestRegisterTxEvents(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterTxEvents(test.txIDsList, test.rt); err != nil {
@@ -447,7 +440,7 @@ func TestRegisterChannelIDs(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterChannelIDs(test.channelIDsList); err != nil {
@@ -492,7 +485,7 @@ func TestUnregisterInvalidEvent(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterInvalidEvent(test.ri); err != nil {
@@ -537,7 +530,7 @@ func TestUnregisterBlockEvent(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterBlockEvent(test.rb); err != nil {
@@ -604,7 +597,7 @@ func TestUnregisterChaincodeEvents(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterChaincodeEvents(test.chaincodeEventsListReg, test.rc); err != nil {
@@ -663,7 +656,7 @@ func TestUnregisterTxEvents(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterTxEvents(test.txIDsListReg, test.rt); err != nil {
@@ -718,7 +711,7 @@ func TestUnregisterChannelIDs(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(peerAddress, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(peerAddress, regTimeout, mockDisconnected)
 			_ = eventsClient.Start()
 			if test.alreadyRegd != false {
 				if err = eventsClient.RegisterChannelIDs(test.channelIDsListReg); err != nil {
@@ -742,31 +735,150 @@ func TestProcessEvents(t *testing.T) {
 	var regTimeout = 5 * time.Second
 
 	var cases = []struct {
-		name     string
-		address  string
-		expected bool
+		name      string
+		address   string
+		block     bool
+		channel   bool
+		tx        bool
+		chaincode bool
+		invalid   bool
+		expected  bool
 	}{
 		{
-			name:     "success",
-			address:  peerAddress,
-			expected: true,
+			name:      "success",
+			address:   peerAddress,
+			block:     false,
+			channel:   false,
+			tx:        false,
+			chaincode: false,
+			invalid:   false,
+			expected:  true,
+		},
+		{
+			name:      "success reg block event",
+			address:   peerAddress,
+			block:     true,
+			channel:   false,
+			tx:        false,
+			chaincode: false,
+			invalid:   false,
+			expected:  true,
+		},
+		{
+			name:      "success reg channel event",
+			address:   peerAddress,
+			block:     false,
+			channel:   true,
+			tx:        false,
+			chaincode: false,
+			invalid:   false,
+			expected:  true,
+		},
+		{
+			name:      "success reg tx event",
+			address:   peerAddress,
+			block:     false,
+			channel:   false,
+			tx:        true,
+			chaincode: false,
+			invalid:   false,
+			expected:  true,
+		},
+		{
+			name:      "success reg chaincode event",
+			address:   peerAddress,
+			block:     false,
+			channel:   false,
+			tx:        false,
+			chaincode: true,
+			invalid:   false,
+			expected:  true,
+		},
+		{
+			name:      "success reg invalid event",
+			address:   peerAddress,
+			block:     false,
+			channel:   false,
+			tx:        false,
+			chaincode: false,
+			invalid:   true,
+			expected:  true,
 		},
 	}
 
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(test.address, regTimeout, mockDisconnected)
+			eventsClient, _ := NewEventsClient(test.address, regTimeout, mockDisconnected)
 			err = eventsClient.Start()
-		        creator, err := getCreatorFromLocalMSP()
-		        if err != nil {
+			creator, err := getCreatorFromLocalMSP()
+			if err != nil {
 				t.Fail()
 				t.Logf("Error getting creator from MSP %s", err)
-		        }
-			emsg := &peer.Event{Event: &peer.Event_Block{Block: &common.Block{}}, Creator: creator}
+			}
+			if test.block == true {
+				err := eventsClient.RegisterBlockEvent(func(msg *peer.Event_Block) error {
+					fmt.Println("Received block")
+					return nil
+				})
+				if err != nil {
+					t.Fail()
+					t.Logf("Error registering for block events: %s", err)
+				}
+			}
+			if test.channel == true {
+				s := make([]string, 1)
+				s[0] = "test_chan"
+				err := eventsClient.RegisterChannelIDs(s)
+				if err != nil {
+					t.Fail()
+					t.Logf("Error registering for channel: %s", err)
+				}
+			}
+			if test.tx == true {
+				s := make([]string, 1)
+				s[0] = "test_tx"
+				err := eventsClient.RegisterTxEvents(s, func(msg *peer.Transaction) error {
+					fmt.Println("Received tx event")
+					return nil
+				})
+				if err != nil {
+					t.Fail()
+					t.Logf("Error register for tx: %s", err)
+				}
+			}
+			if test.chaincode == true {
+				s := make([]string, 2)
+				s[0] = "test_cc"
+				s[1] = "test_e"
+
+				err := eventsClient.RegisterChaincodeEvents(s, func(msg *peer.ChaincodeEvent) error {
+					fmt.Println("Received chaincode event")
+					return nil
+				})
+				if err != nil {
+					t.Fail()
+					t.Logf("Error registering for block events: %s", err)
+				}
+			}
+			if test.invalid == true {
+				err := eventsClient.RegisterInvalidEvent(func(msg *common.ChannelHeader) error {
+					fmt.Printf("Received invalid transaction from channel '%s'\n", msg.ChannelId)
+					fmt.Printf("Transaction invalid: TxID: %s\n", msg.TxId)
+					return nil
+				})
+				if err != nil {
+					t.Fail()
+					t.Logf("Error registering for tx events: %s", err)
+				}
+			}
+
+			block := testutil.ConstructTestBlock(t, 1, 10, 100)
+			emsg := &peer.Event{Event: &peer.Event_Block{Block: block}, Creator: creator}
+
 			// SEND BLOCK EVENT
+			t.Logf("emsg: %s", fmt.Sprintf("%v", emsg))
 			producer.Send(emsg)
-//			time.Sleep(5 * time.Second)
 
 			if test.expected {
 				assert.NoError(t, err)
@@ -778,60 +890,7 @@ func TestProcessEvents(t *testing.T) {
 		})
 	}
 }
-/*
-func TestProcessEvents(t *testing.T) {
-	var err error
-	var regTimeout = 5 * time.Second
 
-	var cases = []struct {
-		name     string
-		address  string
-		expected bool
-	}{
-		{
-			name:     "success",
-			address:  peerAddress,
-			expected: true,
-		},
-		{
-			name:     "fail no peerAddress",
-			address:  "",
-			expected: false,
-		},
-	}
-
-	for _, test := range cases {
-		t.Run(test.name, func(t *testing.T) {
-			t.Logf("Running test: %s", test.name)
-			eventsClient, _ = NewEventsClient(test.address, regTimeout, mockDisconnected)
-			err = eventsClient.Start()
-
-		        creator, err := getCreatorFromLocalMSP()
-		        if err != nil {
-				t.Fail()
-				t.Logf("Error getting creator from MSP %s", err)
-		        }
-			if eventsClient.stream == nil {
-                		t.Fail()
-				t.Logf("Error, ec.stream is nil")
-        		}
-			emsg := &peer.Event{Event: &peer.Event_Block{Block: &common.Block{}}, Creator: creator}
-			err = eventsClient.send(emsg)
-		        if err != nil {
-				t.Fail()
-				t.Logf("Error sending message %s", err)
-		        }
-			if test.expected {
-				assert.NoError(t, err)
-			} else {
-				fmt.Println("***", err)
-				assert.Error(t, err)
-			}
-			eventsClient.Stop()
-		})
-	}
-}
-*/
 func TestMain(m *testing.M) {
 	err := msptesttools.LoadMSPSetupForTesting()
 	if err != nil {
@@ -843,16 +902,6 @@ func TestMain(m *testing.M) {
 	coreutil.SetupTestConfig()
 
 	var opts []grpc.ServerOption
-
-//nc
-/*
-		creds, err := credentials.NewServerTLSFromFile(config.GetPath("peer.tls.cert.file"), config.GetPath("peer.tls.key.file"))
-		if err != nil {
-			grpclog.Fatalf("Failed to generate credentials %v", err)
-		}
-		opts = []grpc.ServerOption{grpc.Creds(creds)}
-*/
-//endnc
 
 	grpcServer := grpc.NewServer(opts...)
 
@@ -869,6 +918,8 @@ func TestMain(m *testing.M) {
 
 	go grpcServer.Serve(lis)
 
+	status := m.Run()
+	fmt.Println("Run done")
 	time.Sleep(2 * time.Second)
-	os.Exit(m.Run())
+	os.Exit(status)
 }
