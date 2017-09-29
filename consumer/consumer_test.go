@@ -918,8 +918,5 @@ func TestMain(m *testing.M) {
 
 	go grpcServer.Serve(lis)
 
-	status := m.Run()
-	fmt.Println("Run done")
-	time.Sleep(2 * time.Second)
-	os.Exit(status)
+	os.Exit(m.Run())
 }
