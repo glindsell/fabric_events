@@ -6,73 +6,64 @@ events (if there are chaincode events being sent).
 ```sh
 1. go build
 
-2. ./block-listener -events-address=<peer-address> -events-from-chaincode=<chaincode-id> -events-mspdir=<msp-directory> -events-mspid=<msp-id>
+2. Usage of ./block-listener:
+  -events-address string
+    	address of events server (default "0.0.0.0:7053")
+  -events-block
+    	listen to block events
+  -events-chaincode-event string
+    	listen to events from a given chaincode with a given event name - accepts comma separated pairs: <chaincodeID1,event-name1,...>
+  -events-from-channel string
+    	listen to events from a given channel - accepts comma separated values: <channelID1,channelID2,...> - default is all
+  -events-invalid
+    	listen to invalid events
+  -events-mspdir string
+    	set up the msp direction
+  -events-mspid string
+    	set up the mspid
+  -events-txid string
+    	listen to events from a given transaction - accepts comma separated values: <transactionID1,transactionID2,...>
 ```
 Please note that the default MSP under fabric/sampleconfig will be used if no
 MSP parameters are provided.
 
-# Example with the e2e_cli example
-The block listener can be used with TLS enabled or disabled. By default,
-the e2e_cli example will have TLS enabled. In order to allow the
-block-listener sample to connect to peers on e2e_cli example with a TLS
-enabled, the easiest way would be to map 127.0.0.1 to the hostname of peer
-that you are connecting to, such as peer0.org1.example.com. For example on
-\*nix based systems this would be an entry in /etc/hosts file.
+# Example with the hyperledger/fabric-samples/chaincode-docker-devmode example
 
-If you would prefer to disable TLS, you may do so by setting
-CORE_PEER_TLS_ENABLED=***false*** in ``docker-compose-cli.yaml`` and
-``base/peer-base.yaml`` as well as
-ORDERER_GENERAL_TLS_ENABLED=***false*** in``base/docker-compose-base.yaml``.
+Bring the network up with the "up" command:
 
-Next, run the [e2e_cli example](https://github.com/hyperledger/fabric/tree/master/examples/e2e_cli).
-
-Once the "All in one" command:
 ```sh
-./network_setup.sh up
-```
-has completed, attach the event client to peer peer0.org1.example.com by doing
-the following (assuming you are running block-listener in the host environment)
-if TLS is enabled:
-```sh
-CORE_PEER_TLS_ENABLED=true CORE_PEER_TLS_ROOTCERT_FILE=$GOPATH/src/github.com/hyperledger/fabric/examples/e2e_cli/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt ./block-listener -events-address=peer0.org1.example.com:7053 -events-mspdir=$GOPATH/src/github.com/hyperledger/fabric/examples/e2e_cli/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp -events-mspid=Org1MSP
+bash ./up
 ```
 
-If TLS is disabled, you can simply run:
+Build the example_02 chaincode in the hyperledger/fabric-samples/chaincode/chaincode_example02 directory:
+
 ```sh
-./block-listener -events-address=peer0.org1.example.com:7053 -events-mspdir=$GOPATH/src/github.com/hyperledger/fabric/examples/e2e_cli/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp -events-mspid=Org1MSP
+docker exec chaincode bash -c "cd chaincode_example02;go build"
 ```
 
-The event client should output "Event Address: peer0.org1.example.com:7053"
+Run the chaincode in the chaincode container with the following command:
+```sh
+docker exec chaincode bash -c "cd chaincode_example02;CORE_PEER_ADDRESS=peer:7051 CORE_CHAINCODE_ID_NAME=mycc:0 ./chaincode_example02"
+```
+
+Install and instantiate the chaincode using the following commands:
+```sh
+docker exec cli bash -c "peer chaincode install -p chaincodedev/chaincode/chaincode_example02 -n mycc -v 0"
+
+docker exec cli bash -c "peer chaincode instantiate -n mycc -v 0 -c '{\"Args\":[\"init\",\"a\",\"100\",\"b\",\"200    \"]}' -C myc"
+```
+
+Start the block listener:
+```sh
+./block-listener -events-address=0.0.0.0:7053 -events-mspdir=$GOPATH/src/github.com/hyperledger/fabric-samples/chaincode-docker-devmode/msp -events-mspid=DEFAULT -events-block=TRUE
+```
+
+The event client should output "Event Address: 0.0.0.0:7053"
 and wait for events.
 
-Exec into the cli container:
-
+Invoke a transaction:
 ```sh
-docker exec -it cli bash
-```
-
-Next, setup the environment variables for peer0.org1.example.com.
-If TLS is enabled:
-```sh
-CORE_PEER_MSPCONFIGPATH=$GOPATH/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
-CORE_PEER_ADDRESS=peer0.org1.example.com:7051
-CORE_PEER_LOCALMSPID="Org1MSP"
-ORDERER_CA=$GOPATH/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
-```
-If TLS is disabled:
-```sh
-CORE_PEER_MSPCONFIGPATH=$GOPATH/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
-CORE_PEER_ADDRESS=peer0.org1.example.com:7051
-CORE_PEER_LOCALMSPID="Org1MSP"
-```
-
-Create an invoke transaction. If TLS is enabled:
-```sh
-peer chaincode invoke -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C mychannel -n mycc -c '{"Args":["invoke","a","b","10"]}'
-```
-If TLS is disabled:
-```sh
-peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n mycc -c '{"Args":["invoke","a","b","10"]}'
+docker exec cli bash -c "peer chaincode invoke -n mycc -c '{\"Args\":[\"invoke\",\"a\",\"b\",\"10\"]}' -C myc"
 ```
 Now you should see the block content displayed in the terminal running the block
 listener.
