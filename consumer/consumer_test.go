@@ -883,7 +883,6 @@ func TestProcessEvents(t *testing.T) {
 			if test.expected {
 				assert.NoError(t, err)
 			} else {
-				fmt.Println("***", err)
 				assert.Error(t, err)
 			}
 			eventsClient.Stop()
