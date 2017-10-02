@@ -35,7 +35,7 @@ Bring the network up with the "up" command:
 bash ./up
 ```
 
-Build the example_02 chaincode in the hyperledger/fabric-samples/chaincode/chaincode_example02 directory:
+Build the example_02 chaincode:
 
 ```sh
 docker exec chaincode bash -c "cd chaincode_example02;go build"
