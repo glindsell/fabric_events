@@ -2,7 +2,7 @@
 block-listener.go connects to a peer in order to receive block and chaincode
 events (if there are chaincode events being sent).
 
-# To Run
+# Usage
 ```sh
 1. go build
 
