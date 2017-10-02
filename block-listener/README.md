@@ -1,6 +1,7 @@
 # What is block-listener
-block-listener.go connects to a peer in order to receive block and chaincode
-events (if there are chaincode events being sent).
+block-listener.go connects to a peer in order to receive block, chaincode
+events, events from a specified channel and invalid events (if there are such
+events being sent), in any combination the user requests.
 
 # Usage
 ```sh
